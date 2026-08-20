@@ -1,0 +1,17 @@
+{
+    "python.analysis.typeCheckingMode": "strict",
+    "python.languageServer": "None",
+    "ty.disableLanguageServices": false,
+    "[markdown]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true,
+      "editor.formatOnSaveMode": "file",
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    }
+}
