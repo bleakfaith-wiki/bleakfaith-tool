@@ -7,7 +7,10 @@ authors = [
     { name = "Adam Hellberg", email = "sharparam@sharparam.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "colorama>=0.4.6",
+    "structlog>=26.1.0",
+]
 
 [project.scripts]
 bleakfaith-tool = "bleakfaith_tool:main"

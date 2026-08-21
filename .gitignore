@@ -8,3 +8,16 @@ dist/
 
 # Ruff
 .ruff_cache
+
+.env
+
+# Ignore GUID.sav and JSON used for testing
+GUID.sav
+GUID.json
+
+# Ignore archives
+*.zip
+*.tar
+*.tgz
+*.gz
+*.bz2

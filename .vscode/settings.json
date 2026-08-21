@@ -1,6 +1,7 @@
 {
     "python.analysis.typeCheckingMode": "strict",
     "python.languageServer": "None",
+    "python.terminal.useEnvFile": true,
     "ty.disableLanguageServices": false,
     "[markdown]": {
       "editor.defaultFormatter": "charliermarsh.ruff",

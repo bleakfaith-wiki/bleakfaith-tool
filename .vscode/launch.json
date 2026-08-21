@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current file",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: BFF tool",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "bleakfaith_tool.__init__",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}
