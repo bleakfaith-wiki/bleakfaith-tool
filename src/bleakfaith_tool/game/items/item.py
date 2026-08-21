@@ -37,6 +37,8 @@ class Item:
         self.tier: int = value["Tier_0"]
         self.armor_data = ArmorData(value["ArmorData_0"])
         self.weapon_data = WeaponData(value["WeaponData_0"])
+        self.consumable_data = ConsumableData(value["ConsumableData_0"])
+        self.fragment_data = FragmentData(value["FragmentData_0"], l10n)
 
     def __str__(self) -> str:
         return f'InventoryItem(guid={self.guid}, name="{self.name}")'
@@ -69,7 +71,37 @@ class WeaponData:
     def __init__(self, data: dict) -> None:
         self.damage_min: float = data["MinDamage_0"]
         self.damage_max: float = data["MaxDamage_0"]
+        self.speed: str = data["WeaponSpeed_0"]
+        self.type: str = data["WeaponType_0"]
+        self.sharpness: str = data["Sharpness_0"]
         self.can_generate_hit: bool = data["CanGenerateHit_0"]
+        self.fragment_slot_data = FragmentSlotData(data["FragmentSlotData_0"])
+        self.holster_locations: list[str] = data["HolsterLocations_0"]
+        self.primary_class_reference: str | None = none_str(
+            data["PrimaryClassRefference_0"]
+        )
+        self.secondary_class_reference: str | None = none_str(
+            data["SecondaryClassRefference_0"]
+        )
+        # TODO: SpecialData_0
+        self.primary_custom_slot: str = data["PrimaryCustomSlot_0"]
+        self.secondary_custom_slot: str = data["SecondaryCustomSlot_0"]
+        self.holster_slots: list[str] = data["HolsterSlots_0"]
+
+
+class ConsumableData:
+    def __init__(self, data: dict) -> None:
+        self.type: str = data["ConsumableType_0"]
+
+
+class FragmentData:
+    def __init__(self, data: dict, l10n: Translations) -> None:
+        self.name: str = l10n(extract_string(data["Name_0"]))
+        self.description: str = l10n(extract_string(data["Description_0"]))
+        self.type: str = data["Type_0"]
+        self.tier: int = data["Tier_0"]
+        self.quest_id: int = data["QuestID_0"]
+        self.icon: str | None = none_str(data["Icon_0"])
 
 
 class FragmentSlotData:
