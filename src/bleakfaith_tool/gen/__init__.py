@@ -50,6 +50,7 @@ def gen_items(items: Items) -> str:
     for item in items.by_id_base.values():
         start_item(lines, item)
         lines.append(f'    name = "{item.name}",')
+        lines.append(f'    description = "{item.description}",')
         if len(item.types) > 0:
             assert len(item.types) == 1, (
                 f"Item {item.name} (GUID:{item.guid}) has multiple types: {item.types}"
