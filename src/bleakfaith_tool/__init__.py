@@ -7,6 +7,7 @@ from bleakfaith_tool.game import Game
 from bleakfaith_tool.game.items import Items
 from bleakfaith_tool.game.loot_table import loot_tables_from_data_table
 from bleakfaith_tool.game.recipes import recipes_from_game
+from bleakfaith_tool.gen import LuaGenerator
 
 LOG = structlog.get_logger()
 
@@ -54,13 +55,19 @@ def main() -> int:
 
     lt_evolved_plagued = [lt for lt in loot_tables.values() if lt.id in (1, 4, 30, 43)]
 
-    for lt in lt_evolved_plagued:
-        print(f"Loot table {lt.note}:")
-        for entry in lt.entries:
-            item = items.id_first(entry.item_id)
-            print(
-                f"  {entry.rate * 100}% of {entry.min}-{entry.max}x {item.name} (id={entry.item_id})"  # ty: ignore[unresolved-attribute]
-            )
+    # for lt in lt_evolved_plagued:
+    #     print(f"Loot table {lt.note}:")
+    #     for entry in lt.entries:
+    #         item = items.id_first(entry.item_id)
+    #         print(
+    #             f"  {entry.rate * 100}% of {entry.min}-{entry.max}x {item.name} (id={entry.item_id})"  # ty: ignore[unresolved-attribute]
+    #         )
+
+    luagen = LuaGenerator("out/lua")
+
+    luagen.write_items(items)
+    luagen.write_weapons(items)
+    luagen.write_loot_tables(loot_tables, items)
 
     return 0
 

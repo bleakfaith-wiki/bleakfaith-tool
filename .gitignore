@@ -15,6 +15,9 @@ dist/
 GUID.sav
 GUID.json
 
+# Ignore generated files
+/out
+
 # Ignore archives
 *.zip
 *.tar
