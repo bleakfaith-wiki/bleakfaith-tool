@@ -58,6 +58,7 @@ def main() -> int:
     luagen.write_items(items)
     luagen.write_weapons(items)
     luagen.write_loot_tables(loot_tables, items)
+    luagen.write_recipes(recipes, items)
 
     return 0
 

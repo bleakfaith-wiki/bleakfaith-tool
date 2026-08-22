@@ -4,6 +4,7 @@ import structlog
 
 from bleakfaith_tool.game.items import Item, Items
 from bleakfaith_tool.game.loot_table import LootTable
+from bleakfaith_tool.game.recipes import Recipe
 
 LOG = structlog.get_logger()
 
@@ -38,7 +39,7 @@ def render(lines: list[str]) -> str:
     return "\n".join(lines)
 
 
-def gen_items(items: Items):
+def gen_items(items: Items) -> str:
     lines = preamble()
     lines.append("local p = {")
     lines.append("    byGuid = {},")
@@ -67,7 +68,7 @@ def gen_items(items: Items):
     return render(lines)
 
 
-def gen_weapons(items: Items):
+def gen_weapons(items: Items) -> str:
     weapons = [i for i in items.by_id_base.values() if i.is_weapon]
     lines = preamble()
     lines.append("local p = {")
@@ -107,7 +108,7 @@ def gen_weapons(items: Items):
     return render(lines)
 
 
-def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items):
+def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items) -> str:
     lines = preamble()
     lines.append("local p = {}")
 
@@ -125,6 +126,54 @@ def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items):
             lines.append(f"            max = {entry.max},")
             lines.append("        },")
         lines.append("    }")
+        lines.append("}")
+
+    lines.append("return p")
+
+    return render(lines)
+
+
+def gen_recipes(recipes: list[Recipe], items: Items) -> str:
+    lines = preamble()
+    lines.append("local p = {}")
+
+    for recipe in recipes:
+        result_item: Item = items.id_first(recipe.item_id)  # ty: ignore[invalid-assignment]
+        lines.append(f'p["{recipe.key}"] = {{')
+        lines.append(f'    name = "{recipe.name}",')
+        lines.append(f'    type = "{recipe.type}",')
+        lines.append("    result = {")
+        lines.append(f"        id = {recipe.item_id}, -- {result_item.name}")
+        lines.append(f"        quantity = {recipe.per_craft},")
+        lines.append("    },")
+        lines.append("    ingredients = {")
+        for id, quantity in recipe.materials.items():
+            item: Item = items.id_first(id)  # ty: ignore[invalid-assignment]
+            lines.append(f"        [{id}] = {quantity}, -- {item.name}")
+        lines.append("    },")
+        if recipe.needed_item:
+            quest_id = recipe.needed_item
+            lines.append("    needed = {")
+            lines.append(f"        questId = {quest_id},")
+            lines.append("        items = {")
+            quest_items = items.quest_id(quest_id)
+            for item in quest_items:
+                lines.append(f"            {item.id}, -- {item.name}")
+            lines.append("        },")
+            lines.append("    },")
+        else:
+            lines.append("    needed = nil,")
+        lines.append("    craft = {")
+        for craft in recipe.craft:
+            lines.append(f'        "{craft}",')
+        lines.append("    },")
+        if len(recipe.unlock) == 0:
+            lines.append("    unlock = nil,")
+        else:
+            lines.append("    unlock = {")
+            for unlock in recipe.unlock:
+                lines.append(f'        "{unlock}",')
+            lines.append("    },")
         lines.append("}")
 
     lines.append("return p")
@@ -151,6 +200,10 @@ class LuaGenerator:
     ) -> None:
         lua_code = gen_loot_tables(loot_tables, items)
         self._write("loot_tables.lua", lua_code)
+
+    def write_recipes(self, recipes: list[Recipe], items: Items) -> None:
+        lua_code = gen_recipes(recipes, items)
+        self._write("recipes.lua", lua_code)
 
     def _write(self, filename: str, content: str) -> None:
         path = os.path.join(self.path, filename)

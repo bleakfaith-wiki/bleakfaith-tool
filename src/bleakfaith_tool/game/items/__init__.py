@@ -49,3 +49,6 @@ class Items:
 
     def id_first(self, id: int) -> Item | None:
         return self.by_id_base.get(id)
+
+    def quest_id(self, quest_id: int) -> list[Item]:
+        return [item for item in self.list if item.quest_id == quest_id]
