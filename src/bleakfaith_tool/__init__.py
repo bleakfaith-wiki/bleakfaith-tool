@@ -52,7 +52,7 @@ def main() -> int:
     loot_tables_dt = game.data_table("DT_ItemSets")
     loot_tables = loot_tables_from_data_table(loot_tables_dt)
 
-    lt_evolved_plagued = [lt for lt in loot_tables.values() if lt.id in (1, 4, 30)]
+    lt_evolved_plagued = [lt for lt in loot_tables.values() if lt.id in (1, 4, 30, 43)]
 
     for lt in lt_evolved_plagued:
         print(f"Loot table {lt.note}:")
