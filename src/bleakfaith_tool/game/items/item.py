@@ -3,7 +3,7 @@ from bleakfaith_tool.game.parsing import non_neg
 
 
 def none_str(s: str | None) -> str | None:
-    return None if s == "None" or s == "null" else s
+    return None if s in ("None", "null", "") else s
 
 
 def extract_string(data: dict[str, dict[str, dict[str, str]]]) -> str:
@@ -100,8 +100,45 @@ class FragmentData:
         self.description: str = l10n(extract_string(data["Description_0"]))
         self.type: str = data["Type_0"]
         self.tier: int = data["Tier_0"]
+        self.stat_data = FragmentStatData(data["StatData_0"])
+        self.ability_data = FragmentAbilityData(data["AbilityData_0"])
+        self.class_data = FragmentClassData(data["ClassData_0"])
         self.quest_id: int = data["QuestID_0"]
         self.icon: str | None = none_str(data["Icon_0"])
+
+
+class FragmentStatData:
+    def __init__(self, data: dict) -> None:
+        self.armor: dict[str, int] = {}
+        for idx, attr in enumerate(data["StatArmorIncrease_0"]):
+            self.armor[attr] = data["StatArmorIncreaseAmount_0"][idx]
+        self.weapon: dict[str, int] = {}
+        for idx, attr in enumerate(data["StatWeaponIncrease_0"]):
+            self.weapon[attr] = data["StatWeaponIncreaseAmount_0"][idx]
+
+
+class FragmentAbilityData:
+    def __init__(self, data: dict) -> None:
+        # TODO: Figure out what this contains
+        self.ability = {
+            "old": {
+                "asset_path_name": none_str(
+                    data["Ability_0"]["Old"]["asset_path_name"]
+                ),
+                "sub_path_string": none_str(
+                    data["Ability_0"]["Old"]["sub_path_string"]
+                ),
+            }
+        }
+        # TODO: Figure out what it contains
+        self.acceptable_weapons: list = data["AcceptableWeapons_0"]
+
+
+class FragmentClassData:
+    def __init__(self, data: dict) -> None:
+        self.is_passive: bool = data["isPassive_0"]
+        # TODO: Figure out what it contains
+        self.abilities: list = data["Abilities_0"]
 
 
 class FragmentSlotData:

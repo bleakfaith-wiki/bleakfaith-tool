@@ -5,6 +5,7 @@ import structlog
 
 from bleakfaith_tool.game import Game
 from bleakfaith_tool.game.items import load_from_guid_file as load_items_from_guid_file
+from bleakfaith_tool.game.loot_table import loot_tables_from_data_table
 from bleakfaith_tool.game.recipes import recipes_from_game
 
 LOG = structlog.get_logger()
@@ -47,6 +48,19 @@ def main() -> int:
 
     recipes = recipes_from_game(game)
     inv_data = load_items_from_guid_file(guid_path, game)
+
+    loot_tables_dt = game.data_table("DT_ItemSets")
+    loot_tables = loot_tables_from_data_table(loot_tables_dt)
+
+    lt_evolved_plagued = [lt for lt in loot_tables.values() if lt.id in (1, 4, 30)]
+
+    for lt in lt_evolved_plagued:
+        print(f"Loot table {lt.note}:")
+        for entry in lt.entries:
+            item = next(i for i in inv_data.values() if i.id == entry.item_id)
+            print(
+                f"  {entry.rate * 100}% of {entry.min}-{entry.max}x {item.name} (id={entry.item_id})"
+            )
 
     return 0
 
