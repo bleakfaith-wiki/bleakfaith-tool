@@ -4,11 +4,18 @@ import sys
 import structlog
 
 from bleakfaith_tool.game import Game
-from bleakfaith_tool.game.items import load_from_guid_file as load_items_from_guid_file
+from bleakfaith_tool.game.items import Items
 from bleakfaith_tool.game.loot_table import loot_tables_from_data_table
 from bleakfaith_tool.game.recipes import recipes_from_game
 
 LOG = structlog.get_logger()
+
+
+def env_or_raise(name: str) -> str:
+    if value := os.getenv(name):
+        return value
+    LOG.error("environment variable not set", name=name)
+    raise RuntimeError(f"Environment variable {name} is not set.")
 
 
 def main() -> int:
@@ -33,21 +40,14 @@ def main() -> int:
 
     LOG.info("Starting")
 
-    export_path = os.getenv("BFF_EXPORT_PATH")
-    if export_path is None:
-        LOG.error("BFF_EXPORT_PATH environment variable is not set.")
-        return 1
+    export_path = env_or_raise("BFF_EXPORT_PATH")
 
     game = Game(export_path)
 
-    guid_path = os.getenv("BFF_GUID_PATH")
-
-    if guid_path is None:
-        LOG.error("BFF_GUID_PATH environment variable is not set.")
-        return 1
+    guid_path = env_or_raise("BFF_GUID_PATH")
 
     recipes = recipes_from_game(game)
-    inv_data = load_items_from_guid_file(guid_path, game)
+    items = Items(guid_path, game.translations)
 
     loot_tables_dt = game.data_table("DT_ItemSets")
     loot_tables = loot_tables_from_data_table(loot_tables_dt)
@@ -57,9 +57,9 @@ def main() -> int:
     for lt in lt_evolved_plagued:
         print(f"Loot table {lt.note}:")
         for entry in lt.entries:
-            item = next(i for i in inv_data.values() if i.id == entry.item_id)
+            item = items.id_first(entry.item_id)
             print(
-                f"  {entry.rate * 100}% of {entry.min}-{entry.max}x {item.name} (id={entry.item_id})"
+                f"  {entry.rate * 100}% of {entry.min}-{entry.max}x {item.name} (id={entry.item_id})"  # ty: ignore[unresolved-attribute]
             )
 
     return 0
