@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -20,7 +21,14 @@ def env_or_raise(name: str) -> str:
 
 
 def main() -> int:
+    log_level = os.getenv("LOG_LEVEL")
+    if log_level:
+        log_level = log_level.upper()
+    else:
+        log_level = logging.INFO
+
     structlog.configure(
+        wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=[
             structlog.contextvars.merge_contextvars,
             structlog.processors.add_log_level,
@@ -36,7 +44,7 @@ def main() -> int:
             ),
             structlog.processors.UnicodeDecoder(),
             structlog.dev.ConsoleRenderer(),
-        ]
+        ],
     )
 
     LOG.info("Starting")

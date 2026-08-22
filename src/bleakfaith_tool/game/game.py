@@ -18,10 +18,13 @@ class Game:
         self.data_tables: dict[str, DataTable] = {}
         self.translations = Translations()
         registry_path = os.path.join(base_path, "AssetRegistry.json")
-        assets = assets_from_registry(registry_path)
+        self.assets = assets_from_registry(registry_path)
+        LOG.info(
+            "loaded assets from registry", count=len(self.assets), path=registry_path
+        )
         enum_paths = []
         data_table_paths = []
-        for asset in assets:
+        for asset in self.assets:
             match asset.asset_class:
                 case "DataTable":
                     data_table_paths.append(asset.package_name.lstrip("/") + ".json")
