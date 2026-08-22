@@ -10,5 +10,11 @@ def normalize(path: str) -> str:
     while FModel will use `/Forsaken/Content/`.
 
     This function normalizes paths to use the style from UE Viewer.
+
+    Args:
+        path (str): The path to normalize.
+
+    Returns:
+        str: The normalized path.
     """
     return re.sub(r"^(/)?Forsaken/Content(/|$)", r"\1Game\2", path)
