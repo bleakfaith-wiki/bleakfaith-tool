@@ -87,8 +87,6 @@ class Game:
     def enum_entry(self, name: str) -> EnumEntry | None:
         enum_name = name.split("::")[0]
         enum = self.enum(enum_name)
-        if enum is None:
-            return None
         return enum.by_name.get(name)
 
     def enum_display(self, name: str) -> str | None:
