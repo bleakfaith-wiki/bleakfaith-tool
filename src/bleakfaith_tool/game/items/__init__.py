@@ -1,5 +1,5 @@
 import json
-from typing import Iterator
+from collections.abc import Iterator
 
 from bleakfaith_tool.game import Game
 from bleakfaith_tool.game.l10n import Translations
