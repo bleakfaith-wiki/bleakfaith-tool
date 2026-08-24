@@ -115,8 +115,10 @@ class Item:
         self.guid: int = value["ItemGUID_0"]
         self.max_stack: int = value["MaxStack_0"]
         self.is_unique: bool = value["Unique_0"]
-        self.name: str = clean_name(l10n(extract_string(value["Name_0"])))
-        self.description: str = l10n(extract_string(value["Description_0"]))
+        self.name: str = clean_name(l10n(extract_string(value["Name_0"]))).strip()
+        self.description: str | None = l10n(extract_string(value["Description_0"]))
+        if self.description is not None:
+            self.description = self.description.strip()
         self.types: list[ItemType] = list(parse_types(value["ItemType_0"]))
         self.required_other_slots: list[str] = value["DoesRequireAnotherSlot_0"]
         self.quest_id: int | None = non_neg(value["QuestID_0"])
