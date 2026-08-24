@@ -1,4 +1,5 @@
 from bleakfaith_tool.game.items.types import (
+    ArmorWeight,
     DamageType,
     ItemType,
     Sharpness,
@@ -74,6 +75,13 @@ SHARPNESS_MAP = {
     "EWeaponSharpness::VE_Sharp": Sharpness.SHARP,
 }
 
+ARMOR_WEIGHT_MAP = {
+    "EArmorWeight::VE_Light": ArmorWeight.LIGHT,
+    "EArmorWeight::VE_Medium": ArmorWeight.MEDIUM,
+    "EArmorWeight::VE_Heavy": ArmorWeight.HEAVY,
+    "EArmorWeight::VE_Cloth": ArmorWeight.CLOTH,
+}
+
 
 def clean_name(name: str) -> str:
     return name.replace("’", "'")
@@ -135,6 +143,10 @@ class Item:
         return self.weapon_data.type not in (None, WeaponType.SHIELD)
 
     @property
+    def is_armor(self) -> bool:
+        return any(t.is_armor for t in self.types)
+
+    @property
     def is_shield(self) -> bool:
         return (
             ItemType.WEAPON in self.types and self.weapon_data.type == WeaponType.SHIELD
@@ -151,8 +163,8 @@ class ArmorData:
         self.blunt_multiplier: float = data["BluntWeaponRessistanceMultiplier_0"]
         self.techno_multiplier: float = data["TechnoWeaponRessistanceMultiplier_0"]
         self.tier: int = data["Tier_0"]
-        self.slot: str = data["Slot_0"]
-        self.weight: str = data["ArmorWeight_0"]
+        self.slot: ItemType | None = TYPE_MAP.get(data["Slot_0"])
+        self.weight: ArmorWeight | None = ARMOR_WEIGHT_MAP.get(data["ArmorWeight_0"])
         self.fragment_slot_data: FragmentSlotData = FragmentSlotData(
             data["FragmentSlotData_0"]
         )

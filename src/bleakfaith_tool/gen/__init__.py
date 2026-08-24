@@ -3,6 +3,7 @@ import os
 import structlog
 
 from bleakfaith_tool.game.items import Item, Items
+from bleakfaith_tool.game.items.item import ArmorData
 from bleakfaith_tool.game.loot_table import LootTable
 from bleakfaith_tool.game.recipes import Recipe
 
@@ -60,7 +61,12 @@ def gen_items(items: Items) -> str:
         # for type in item.types:
         #     lines.append(f'        ["{type.value}"] = true,')
         # lines.append("    },")
-        lines.append(f"    tier = {item.tier},")
+        lines.append(f"    tier = {item.tier}, -- Mk {item.tier - 1}")
+        min_tier_item = min(items.id(item.id), key=lambda i: i.tier)
+        lines.append(
+            f"    tierMin = {min_tier_item.tier}, -- Mk {min_tier_item.tier - 1}"
+        )
+        lines.append(f"    weight = {item.weight},")
         end_item(lines, item)
         lines.append(f'p.byName["{item.name}"] = p.byGuid[{item.guid}]')
 
@@ -82,11 +88,12 @@ def gen_weapons(items: Items) -> str:
         lines.append(f"-- {weapon.name}")
         start_item(lines, weapon)
         lines.append("    damage = {")
+        lines.append(f'        type = "{wdat.damage_type.value or "nil"}",')
         lines.append(
-            f"        [{weapon.tier}] = {{ min = {wdat.damage_min}, max = {wdat.damage_max} }},"
+            f"        [{weapon.tier}] = {{ min = {wdat.damage_min}, max = {wdat.damage_max} }}, -- Mk {weapon.tier - 1}"
         )
         higher_tiers = [
-            w for w in weapons if w.guid == weapon.guid and w.tier > weapon.tier
+            w for w in items if w.guid == weapon.guid and w.tier > weapon.tier
         ]
         higher_tiers.sort(key=lambda w: w.tier)
         for w in higher_tiers:
@@ -100,9 +107,84 @@ def gen_weapons(items: Items) -> str:
             lines.append(f'    speed = "{wdat.speed.value}",')
         if wdat.sharpness:
             lines.append(f'    sharpness = "{wdat.sharpness.value}",')
-        if wdat.damage_type:
-            lines.append(f'    damageType = "{wdat.damage_type.value}",')
         end_item(lines, weapon)
+
+    lines.append("return p")
+
+    return render(lines)
+
+
+def gen_armor(items: Items) -> str:
+    armors = [i for i in items.by_id_base.values() if i.is_armor]
+    lines = preamble()
+    lines.append("local p = {")
+    lines.append("    byGuid = {},")
+    lines.append("    byId = {},")
+    lines.append("}")
+
+    def print_defense(dat: ArmorData) -> None:
+        lines.append(f"        [{dat.tier}] = {{ -- Mk {dat.tier - 1}")
+        lines.append(f"            sharp = {dat.sharp},")
+        lines.append(f"            sharp_multiplier = {dat.sharp_multiplier},")
+        lines.append(f"            blunt = {dat.blunt},")
+        lines.append(f"            blunt_multiplier = {dat.blunt_multiplier},")
+        lines.append(f"            techno = {dat.techno},")
+        lines.append(f"            techno_multiplier = {dat.techno_multiplier},")
+        lines.append("        },")
+
+    for armor in armors:
+        adat = armor.armor_data
+        lines.append(f"-- {armor.name}")
+        start_item(lines, armor)
+        lines.append("    defense = {")
+        print_defense(adat)
+        higher_tiers = [
+            a for a in items if a.guid == armor.guid and a.tier > armor.tier
+        ]
+        higher_tiers.sort(key=lambda w: w.tier)
+        for a in higher_tiers:
+            print_defense(a.armor_data)
+        lines.append("    },")
+        lines.append(f'    weight = "{adat.weight.value}",')
+        lines.append(f'    slot = "{adat.slot.value}",')
+        end_item(lines, armor)
+
+    lines.append("return p")
+
+    return render(lines)
+
+
+def gen_shields(items: Items) -> str:
+    shields = [i for i in items.by_id_base.values() if i.is_shield]
+    lines = preamble()
+    lines.append("local p = {")
+    lines.append("    byGuid = {},")
+    lines.append("    byId = {},")
+    lines.append("}")
+
+    def print_defense(dat: ArmorData) -> None:
+        lines.append(f"        [{dat.tier}] = {{ -- Mk {dat.tier - 1}")
+        lines.append(f"            sharp_multiplier = {dat.sharp_multiplier},")
+        lines.append(f"            blunt_multiplier = {dat.blunt_multiplier},")
+        lines.append(f"            techno_multiplier = {dat.techno_multiplier},")
+        lines.append("        },")
+
+    for shield in shields:
+        adat = shield.armor_data
+        lines.append(f"-- {shield.name}")
+        start_item(lines, shield)
+        lines.append("    defense = {")
+        print_defense(adat)
+        higher_tiers = [
+            s for s in items if s.guid == shield.guid and s.tier > shield.tier
+        ]
+        higher_tiers.sort(key=lambda s: s.tier)
+        for s in higher_tiers:
+            print_defense(s.armor_data)
+        lines.append("    },")
+        lines.append(f'    weight = "{shield.armor_data.weight.value}",')
+        # lines.append(f'    slot = "{shield.armor_data.slot.value}",')
+        end_item(lines, shield)
 
     lines.append("return p")
 
@@ -195,6 +277,14 @@ class LuaGenerator:
     def write_weapons(self, items: Items) -> None:
         lua_code = gen_weapons(items)
         self._write("weapons.lua", lua_code)
+
+    def write_armor(self, items: Items) -> None:
+        lua_code = gen_armor(items)
+        self._write("armor.lua", lua_code)
+
+    def write_shields(self, items: Items) -> None:
+        lua_code = gen_shields(items)
+        self._write("shields.lua", lua_code)
 
     def write_loot_tables(
         self, loot_tables: dict[int, LootTable], items: Items

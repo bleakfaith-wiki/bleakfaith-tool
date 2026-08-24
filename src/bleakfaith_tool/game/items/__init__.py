@@ -1,4 +1,5 @@
 import json
+from typing import Iterator
 
 from bleakfaith_tool.game import Game
 from bleakfaith_tool.game.l10n import Translations
@@ -38,7 +39,7 @@ class Items:
             ):
                 self.by_id_base[item.id] = item
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Item]:
         yield from self.list
 
     def guid(self, guid: int) -> Item | None:

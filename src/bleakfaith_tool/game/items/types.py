@@ -90,3 +90,10 @@ class DamageType(Enum):
     BLUNT = "Blunt"
     SHARP = "Sharp"
     TECHNOMANCY = "Technomancy"
+
+
+class ArmorWeight(Enum):
+    LIGHT = "Light"
+    MEDIUM = "Medium"
+    HEAVY = "Heavy"
+    CLOTH = "Cloth"
