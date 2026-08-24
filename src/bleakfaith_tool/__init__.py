@@ -7,6 +7,7 @@ import structlog
 from bleakfaith_tool.game import Game
 from bleakfaith_tool.game.items import Items
 from bleakfaith_tool.game.loot_table import loot_tables_from_data_table
+from bleakfaith_tool.game.npc import Npc
 from bleakfaith_tool.game.recipes import recipes_from_game
 from bleakfaith_tool.gen import LuaGenerator
 
@@ -61,6 +62,12 @@ def main() -> int:
     loot_tables_dt = game.data_table("DT_ItemSets")
     loot_tables = loot_tables_from_data_table(loot_tables_dt)
 
+    npcs = [
+        Npc.from_bpgc(bp, name, game.translations)
+        for name, bp in game.bpgcs.items()
+        if name.startswith("NPC_") or "_DocileNPC_" in name
+    ]
+
     luagen = LuaGenerator("out/lua")
 
     luagen.write_items(items)
@@ -69,6 +76,7 @@ def main() -> int:
     luagen.write_shields(items)
     luagen.write_loot_tables(loot_tables, items)
     luagen.write_recipes(recipes, items)
+    luagen.write_npcs(npcs, items, loot_tables)
 
     return 0
 

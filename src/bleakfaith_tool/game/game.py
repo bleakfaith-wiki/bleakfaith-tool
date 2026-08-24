@@ -1,9 +1,15 @@
+import json
 import os.path
 
 import structlog
 
 from bleakfaith_tool.game.l10n import Translations
-from bleakfaith_tool.unreal import DataTable, EnumEntry, UserDefinedEnum
+from bleakfaith_tool.unreal import (
+    BlueprintGeneratedClass,
+    DataTable,
+    EnumEntry,
+    UserDefinedEnum,
+)
 from bleakfaith_tool.unreal.assets import from_registry_file as assets_from_registry
 
 LOG = structlog.get_logger()
@@ -17,6 +23,7 @@ class Game:
         self.enums: dict[str, UserDefinedEnum] = {}
         self.data_tables: dict[str, DataTable] = {}
         self.translations = Translations()
+        self.bpgcs: dict[str, BlueprintGeneratedClass] = {}
         registry_path = os.path.join(base_path, "AssetRegistry.json")
         self.assets = assets_from_registry(registry_path)
         LOG.info(
@@ -24,18 +31,24 @@ class Game:
         )
         enum_paths = []
         data_table_paths = []
+        bpgc_paths = []
         for asset in self.assets:
+            path = asset.package_name.lstrip("/") + ".json"
             match asset.asset_class:
                 case "DataTable":
-                    data_table_paths.append(asset.package_name.lstrip("/") + ".json")
+                    data_table_paths.append(path)
                 case "UserDefinedEnum":
-                    enum_paths.append(asset.package_name.lstrip("/") + ".json")
+                    enum_paths.append(path)
+                case "BlueprintGeneratedClass":
+                    bpgc_paths.append(path)
         self.load_enums(enum_paths, False)
         self.load_data_tables(data_table_paths, False)
+        self.load_bpgcs(bpgc_paths, False)
         LOG.info(
             "loaded assets",
             enum_count=len(self.enums),
             data_table_count=len(self.data_tables),
+            bpgc_count=len(self.bpgcs),
         )
 
     def load_enum(self, path: str, strict: bool = True) -> None:
@@ -74,6 +87,30 @@ class Game:
     def load_data_tables(self, paths: list[str], strict: bool = True) -> None:
         for path in paths:
             self.load_data_table(path, strict)
+
+    def load_bpgc(self, path: str, strict: bool = True) -> None:
+        path = os.path.join(self.base_path, path)
+        if not os.path.exists(path):
+            LOG.warning("BPGC file not found", path=path)
+            if strict:
+                raise FileNotFoundError(f"BPGC file not found: {path}")
+            return
+
+        with open(path, "r") as f:
+            bpgc: list[dict] = json.load(f)
+
+        name = next(
+            entry["Name"]
+            for entry in bpgc
+            if entry["Type"] == "BlueprintGeneratedClass"
+        )
+
+        self.bpgcs[name] = bpgc
+        LOG.debug("loaded BPGC", name=name, path=path)
+
+    def load_bpgcs(self, paths: list[str], strict: bool = True) -> None:
+        for path in paths:
+            self.load_bpgc(path, strict)
 
     def load_l10n(self, *names: str) -> None:
         for name in names:

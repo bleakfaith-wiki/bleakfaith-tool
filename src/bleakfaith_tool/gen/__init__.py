@@ -5,6 +5,7 @@ import structlog
 from bleakfaith_tool.game.items import Item, Items
 from bleakfaith_tool.game.items.item import ArmorData
 from bleakfaith_tool.game.loot_table import LootTable
+from bleakfaith_tool.game.npc import Npc
 from bleakfaith_tool.game.recipes import Recipe
 
 LOG = structlog.get_logger()
@@ -34,6 +35,18 @@ def start_item(lines: list[str], item: Item) -> None:
 def end_item(lines: list[str], item: Item) -> None:
     lines.append("}")
     lines.append(f"p.byId[{item.id}] = p.byGuid[{item.guid}]")
+
+
+def format_bool(b: bool | None) -> str:
+    if b is None:
+        return "nil"
+    return "true" if b else "false"
+
+
+def format_num(v: float | None) -> str:
+    if v is None:
+        return "nil"
+    return str(v)
 
 
 def render(lines: list[str]) -> str:
@@ -264,6 +277,74 @@ def gen_recipes(recipes: list[Recipe], items: Items) -> str:
     return render(lines)
 
 
+def gen_npcs(npcs: list[Npc], items: Items, loot_tables: dict[int, LootTable]) -> str:
+    lines = preamble()
+    lines.append("local p = {")
+    lines.append("    byId = {},")
+    lines.append("}")
+
+    for npc in npcs:
+        id = npc.id.removesuffix("_C")
+        lines.append(f'p["{id}"] = {{')
+        lines.append(f"    isBoss = {format_bool(npc.is_boss)},")
+        lines.append(f"    isUndamageable = {format_bool(npc.is_undamageable)},")
+        lines.append(f"    faithfulStacks = {format_num(npc.faithful_stacks)},")
+        lines.append(
+            f"    maxPerfectBlockCounter = {format_num(npc.max_perfect_block_counter)},"
+        )
+        lines.append(
+            f"    perfectBlockResetTimer = {format_num(npc.perfect_block_reset_timer)},"
+        )
+        lines.append("    attributes = {")
+        if npc.attributes:
+            lines.append(f"        strength = {format_num(npc.attributes.strength)},")
+            lines.append(f"        agility = {format_num(npc.attributes.agility)},")
+            lines.append(
+                f"        constitution = {format_num(npc.attributes.constitution)},"
+            )
+            lines.append(
+                f"        intelligence = {format_num(npc.attributes.intelligence)},"
+            )
+        lines.append("    },")
+        lines.append("    capabilities = {")
+        for cap in npc.capabilities:
+            lines.append("        {")
+            lines.append(f'            key = "{cap.key}",')
+            lines.append(f"            current = {cap.current},")
+            lines.append(f"            soft_cap = {cap.soft_cap},")
+            lines.append(f"            hard_cap = {cap.hard_cap},")
+            lines.append("        },")
+        lines.append("    },")
+        lines.append("    experience = {")
+        for threshold, exp in sorted(npc.experience.items()):
+            lines.append(f"        [{threshold}] = {exp},")
+        lines.append("    },")
+        lines.append("    lootTables = {")
+        for table_id in npc.loot_tables:
+            lt = loot_tables.get(table_id)
+            lines.append(
+                f"        {table_id}, -- {lt.note if lt else f'<UNKNOWN LOOT TABLE {table_id}>'}"
+            )
+        lines.append("    },")
+        lines.append("    extraLoot = {")
+        for item_id in npc.extra_loot:
+            item = items.by_id_base[item_id]
+            lines.append(f"        {item_id}, -- {item.name}")
+        lines.append("    },")
+        lines.append("    equippedItems = {")
+        for item_id in npc.equipped_items:
+            item = items.by_id_base.get(item_id)
+            lines.append(
+                f"        {item_id}, -- {item.name if item else f'<UNKNOWN ITEM {item_id}>'}"
+            )
+        lines.append("    },")
+        lines.append("}")
+
+    lines.append("return p")
+
+    return render(lines)
+
+
 class LuaGenerator:
     def __init__(self, path: str) -> None:
         self.path = path
@@ -295,6 +376,12 @@ class LuaGenerator:
     def write_recipes(self, recipes: list[Recipe], items: Items) -> None:
         lua_code = gen_recipes(recipes, items)
         self._write("recipes.lua", lua_code)
+
+    def write_npcs(
+        self, npcs: list[Npc], items: Items, loot_tables: dict[int, LootTable]
+    ) -> None:
+        lua_code = gen_npcs(npcs, items, loot_tables)
+        self._write("npcs.lua", lua_code)
 
     def _write(self, filename: str, content: str) -> None:
         path = os.path.join(self.path, filename)
