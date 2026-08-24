@@ -76,7 +76,7 @@ def gen_items(items: Items) -> str:
         #     lines.append(f'        ["{type.value}"] = true,')
         # lines.append("    },")
         lines.append(f"    tier = {item.tier}, -- Mk {item.tier - 1}")
-        min_tier_item = min(items.id(item.id), key=lambda i: i.tier)
+        min_tier_item = min(items.id(item.id), key=lambda i: i.tier)  # ty: ignore[no-matching-overload]
         lines.append(
             f"    tierMin = {min_tier_item.tier}, -- Mk {min_tier_item.tier - 1}"
         )
@@ -102,7 +102,8 @@ def gen_weapons(items: Items) -> str:
         lines.append(f"-- {weapon.name}")
         start_item(lines, weapon)
         lines.append("    damage = {")
-        lines.append(f'        type = "{wdat.damage_type.value or "nil"}",')
+        if wdat.damage_type:
+            lines.append(f'        type = "{wdat.damage_type.value}",')
         lines.append(
             f"        [{weapon.tier}] = {{ min = {wdat.damage_min}, max = {wdat.damage_max} }}, -- Mk {weapon.tier - 1}"
         )
@@ -159,8 +160,10 @@ def gen_armor(items: Items) -> str:
         for a in higher_tiers:
             print_defense(a.armor_data)
         lines.append("    },")
-        lines.append(f'    weight = "{adat.weight.value}",')
-        lines.append(f'    slot = "{adat.slot.value}",')
+        if adat.weight:
+            lines.append(f'    weight = "{adat.weight.value}",')
+        if adat.slot:
+            lines.append(f'    slot = "{adat.slot.value}",')
         end_item(lines, armor)
 
     lines.append("return p")
@@ -196,7 +199,8 @@ def gen_shields(items: Items) -> str:
         for s in higher_tiers:
             print_defense(s.armor_data)
         lines.append("    },")
-        lines.append(f'    weight = "{shield.armor_data.weight.value}",')
+        if shield.armor_data.weight:
+            lines.append(f'    weight = "{shield.armor_data.weight.value}",')
         # lines.append(f'    slot = "{shield.armor_data.slot.value}",')
         end_item(lines, shield)
 
