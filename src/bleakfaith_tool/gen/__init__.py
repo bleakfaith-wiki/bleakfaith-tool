@@ -416,12 +416,12 @@ def gen_recipes(recipes: list[Recipe], items: Items) -> str:
 def gen_npcs(npcs: list[Npc], items: Items, loot_tables: dict[int, LootTable]) -> str:
     lines = preamble()
     lines.append("local p = {")
-    lines.append("    byId = {},")
+    lines.append("    byKey = {},")
     lines.append("}")
 
     for npc in npcs:
         id = npc.id.removesuffix("_C")
-        lines.append(f'p["{id}"] = {{')
+        lines.append(f'p.byKey["{id}"] = {{')
         lines.append(f"    isBoss = {format_bool(npc.is_boss)},")
         lines.append(f"    isUndamageable = {format_bool(npc.is_undamageable)},")
         lines.append(f"    faithfulStacks = {format_num(npc.faithful_stacks)},")
