@@ -5,6 +5,8 @@ import sys
 import structlog
 
 from bleakfaith_tool.game import Game
+from bleakfaith_tool.game.abilities import abilities_from_data_table
+from bleakfaith_tool.game.fragments import fragments_from_data_table
 from bleakfaith_tool.game.items import Items
 from bleakfaith_tool.game.loot_table import loot_tables_from_data_table
 from bleakfaith_tool.game.npc import Npc
@@ -62,6 +64,12 @@ def main() -> int:
     loot_tables_dt = game.data_table("DT_ItemSets")
     loot_tables = loot_tables_from_data_table(loot_tables_dt)
 
+    ability_dt = game.data_table("DT_Abilities")
+    abilities = abilities_from_data_table(ability_dt, game)
+
+    fragments_dt = game.data_table("DT_Fragment")
+    fragments = fragments_from_data_table(fragments_dt, game)
+
     npcs = [
         Npc.from_bpgc(bp, name, game.translations)
         for name, bp in game.bpgcs.items()
@@ -75,6 +83,8 @@ def main() -> int:
     luagen.write_armor(items)
     luagen.write_shields(items)
     luagen.write_loot_tables(loot_tables, items)
+    luagen.write_abilities(abilities)
+    luagen.write_fragments(fragments)
     luagen.write_recipes(recipes, items)
     luagen.write_npcs(npcs, items, loot_tables)
 

@@ -9,6 +9,10 @@ def make_map(value: dict[str, Any]) -> dict[str, str]:
     return {k.split("_")[0]: k for k in value}
 
 
+def fragments_from_data_table(data_table: Any, game: Game) -> dict[int, Fragment]:
+    return {int(k): Fragment(k, v, game) for k, v in data_table.rows.items()}
+
+
 class FragmentType(Enum):
     ABILITY = "Ability"
     STAT = "Stat"
@@ -33,10 +37,14 @@ class Fragment:
         data = value[keymap["Data"]]
         self.name: str = l10n(data["Name"]["SourceString"])
         self.description: str = l10n(data["Description"]["SourceString"])
-        self.type: FragmentType = FragmentType.parse(data["FragmentType"])
+        self.type: FragmentType = FragmentType.parse(data["Type"])
         self.tier: int = data["Tier"]
         self.ability_data: FragmentAbilityData | None = None
         self.stat_data: FragmentStatData | None = None
+        self.is_passive: bool = data["ClassData"]["isPassive"]
+        self.quest_id: int | None = data["QuestID"]
+        if self.quest_id == -1:
+            self.quest_id = None
         if self.type == FragmentType.ABILITY:
             self.ability_data = FragmentAbilityData(data["AbilityData"])
         elif self.type == FragmentType.STAT:
@@ -45,9 +53,8 @@ class Fragment:
 
 class FragmentAbilityData:
     def __init__(self, data: dict[str, Any]) -> None:
-        self.is_passive: bool = data["ClassData"]["isPassive"]
-        self.quest_id: int = data["QuestID"]
         self.acceptable_weapons: list[str] = data["AcceptableWeapons"]
+        self.asset_path_name: str = data["Ability"]["AssetPathName"]
 
 
 class FragmentStatData:

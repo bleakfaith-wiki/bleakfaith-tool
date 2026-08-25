@@ -2,6 +2,8 @@ import os
 
 import structlog
 
+from bleakfaith_tool.game.abilities import Ability
+from bleakfaith_tool.game.fragments import Fragment
 from bleakfaith_tool.game.items import Item, Items
 from bleakfaith_tool.game.items.item import ArmorData
 from bleakfaith_tool.game.loot_table import LootTable
@@ -234,6 +236,85 @@ def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items) -> str:
     return render(lines)
 
 
+def gen_abilities(abilities: dict[str, Ability]) -> str:
+    lines = preamble()
+    lines.append("local p = {}")
+
+    for ability in abilities.values():
+        lines.append(f'p["{ability.key}"] = {{')
+        lines.append(f"    is_passive = {format_bool(ability.is_passive)},")
+        lines.append(f"    is_gear_passive = {format_bool(ability.is_gear_passive)},")
+        lines.append(f"    force_upgrade = {format_bool(ability.force_upgrade)},")
+        lines.append(f"    is_class_active = {format_bool(ability.is_class_active)},")
+        if ability.unlocked_by:
+            lines.append(f"    unlocked_by = {ability.unlocked_by},")
+        lines.append(f'    element = "{ability.element}",')
+        lines.append(f'    type = "{ability.type}",')
+        lines.append(f'    target = "{ability.target}",')
+        lines.append(f"    is_weapon_based = {format_bool(ability.is_weapon_based)},")
+        lines.append("    names = {")
+        for key, name in ability.names.items():
+            lines.append(f'        ["{key}"] = "{name}",')
+        lines.append("    },")
+        lines.append("    descriptions = {")
+        for key, desc in ability.descriptions.items():
+            lines.append(f'        ["{key}"] = [[{desc}]],')
+        lines.append("    },")
+        lines.append(f"    base_damage = {ability.base_damage},")
+        lines.append(
+            f"    is_affected_by_combos = {format_bool(ability.is_affected_by_combos)},"
+        )
+        lines.append("}")
+
+    lines.append("return p")
+
+    return render(lines)
+
+
+def gen_fragments(fragments: dict[int, Fragment]) -> str:
+    lines = preamble()
+    lines.append("local p = {}")
+
+    for fragment in fragments.values():
+        lines.append(f"p[{fragment.id}] = {{")
+        lines.append(f"    id = {fragment.id},")
+        lines.append(f"    is_debug = {format_bool(fragment.is_debug)},")
+        lines.append(f'    name = "{fragment.name}",')
+        lines.append(f'    description = "{fragment.description}",')
+        lines.append(f'    type = "{fragment.type.value}",')
+        lines.append(f"    tier = {fragment.tier},")
+        lines.append(f"    is_passive = {format_bool(fragment.is_passive)},")
+        if fragment.quest_id is not None:
+            lines.append(f"    quest_id = {fragment.quest_id},")
+        if fragment.ability_data:
+            lines.append("    ability_data = {")
+            lines.append("        acceptable_weapons = {")
+            for weapon in fragment.ability_data.acceptable_weapons:
+                lines.append(f'            "{weapon}",')
+            lines.append("        },")
+            lines.append("    },")
+        elif fragment.stat_data:
+            lines.append("    stat_data = {")
+            lines.append("        armor = {")
+            lines.append(
+                f'            attribute = "{fragment.stat_data.armor.attribute}",'
+            )
+            lines.append(f"            amount = {fragment.stat_data.armor.amount},")
+            lines.append("        },")
+            lines.append("        weapon = {")
+            lines.append(
+                f'            attribute = "{fragment.stat_data.weapon.attribute}",'
+            )
+            lines.append(f"            amount = {fragment.stat_data.weapon.amount},")
+            lines.append("        },")
+            lines.append("    },")
+        lines.append("}")
+
+    lines.append("return p")
+
+    return render(lines)
+
+
 def gen_recipes(recipes: list[Recipe], items: Items) -> str:
     lines = preamble()
     lines.append("local p = {}")
@@ -377,6 +458,14 @@ class LuaGenerator:
     ) -> None:
         lua_code = gen_loot_tables(loot_tables, items)
         self._write("loot_tables.lua", lua_code)
+
+    def write_abilities(self, abilities: dict[str, Ability]) -> None:
+        lua_code = gen_abilities(abilities)
+        self._write("abilities.lua", lua_code)
+
+    def write_fragments(self, fragments: dict[int, Fragment]) -> None:
+        lua_code = gen_fragments(fragments)
+        self._write("fragments.lua", lua_code)
 
     def write_recipes(self, recipes: list[Recipe], items: Items) -> None:
         lua_code = gen_recipes(recipes, items)

@@ -1,11 +1,15 @@
 from typing import Any
 
 from bleakfaith_tool.game import Game
-from bleakfaith_tool.unreal import paths
+from bleakfaith_tool.unreal import DataTable, paths
 
 
 def make_map(value: dict[str, Any]) -> dict[str, str]:
     return {k.split("_")[0]: k for k in value}
+
+
+def abilities_from_data_table(data_table: DataTable, game: Game) -> dict[str, Ability]:
+    return {k: Ability(k, v, game) for k, v in data_table.rows.items()}
 
 
 class Ability:
@@ -20,7 +24,7 @@ class Ability:
         self.is_gear_passive: bool = value[keymap["IsGearPassive?"]]
         self.force_upgrade: bool = value[keymap["ForceUpgrade?"]]
         self.is_class_active: bool = value[keymap["IsClassActive?"]]
-        self.unlocked_by: int | None = value[keymap["UnlockedBy_0"]]
+        self.unlocked_by: int | None = value.get(keymap.get("UnlockedBy_0"))
         if self.unlocked_by and self.unlocked_by < 0:
             self.unlocked_by = None
 
@@ -50,4 +54,4 @@ class Ability:
         dmg_data = inner_main[im_keymap["DamageData"]]
         dmg_keymap = make_map(dmg_data)
         self.base_damage: float = dmg_data[dmg_keymap["BaseDamage"]]
-        self.is_affected_bu_combos: bool = dmg_data[dmg_keymap["AffectedbyCombos"]]
+        self.is_affected_by_combos: bool = dmg_data[dmg_keymap["AffectedbyCombos"]]
