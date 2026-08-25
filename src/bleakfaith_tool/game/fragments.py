@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any
 
 from bleakfaith_tool.game import Game
+from bleakfaith_tool.unreal import paths
 
 
 def make_map(value: dict[str, Any]) -> dict[str, str]:
@@ -54,7 +55,7 @@ class Fragment:
 class FragmentAbilityData:
     def __init__(self, data: dict[str, Any]) -> None:
         self.acceptable_weapons: list[str] = data["AcceptableWeapons"]
-        self.asset_path_name: str = data["Ability"]["AssetPathName"]
+        self.asset_path_name: str = paths.normalize(data["Ability"]["AssetPathName"])
 
 
 class FragmentStatData:

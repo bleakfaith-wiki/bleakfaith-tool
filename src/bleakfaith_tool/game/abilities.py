@@ -1,25 +1,43 @@
 from typing import Any
 
+import structlog
+
 from bleakfaith_tool.game import Game
+from bleakfaith_tool.game.fragments import Fragment
 from bleakfaith_tool.unreal import DataTable, paths
+
+LOG = structlog.get_logger()
 
 
 def make_map(value: dict[str, Any]) -> dict[str, str]:
     return {k.split("_")[0]: k for k in value}
 
 
-def abilities_from_data_table(data_table: DataTable, game: Game) -> dict[str, Ability]:
-    return {k: Ability(k, v, game) for k, v in data_table.rows.items()}
+def abilities_from_data_table(
+    data_table: DataTable, game: Game, fragments: dict[str, Fragment]
+) -> dict[str, Ability]:
+    return {k: Ability(k, v, game, fragments) for k, v in data_table.rows.items()}
 
 
 class Ability:
-    def __init__(self, key: str, value: dict[str, Any], game: Game) -> None:
+    def __init__(
+        self,
+        key: str,
+        value: dict[str, Any],
+        game: Game,
+        fragments: dict[str, Fragment],
+    ) -> None:
         l10n = game.translations
-        self.key: str = key
         keymap = make_map(value)
         self.object_path: str = paths.normalize(
             value[keymap["AbilityClass"]]["ObjectPath"]
         )
+        search_path = f"/{self.object_path}"
+        search_path = search_path[: search_path.rfind(".")]
+        fragment = fragments.get(search_path)
+        # TODO: Theory: Only abilities that appear on weapons have a corresponding fragment?
+        self.fragment_id: int | None = fragment.id if fragment else None
+        self.key: str = key
         self.is_passive: bool = value[keymap["IsPassive?"]]
         self.is_gear_passive: bool = value[keymap["IsGearPassive?"]]
         self.force_upgrade: bool = value[keymap["ForceUpgrade?"]]

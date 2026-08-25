@@ -64,11 +64,17 @@ def main() -> int:
     loot_tables_dt = game.data_table("DT_ItemSets")
     loot_tables = loot_tables_from_data_table(loot_tables_dt)
 
-    ability_dt = game.data_table("DT_Abilities")
-    abilities = abilities_from_data_table(ability_dt, game)
-
     fragments_dt = game.data_table("DT_Fragment")
     fragments = fragments_from_data_table(fragments_dt, game)
+
+    ability_fragments_by_path = {
+        f.ability_data.asset_path_name[: f.ability_data.asset_path_name.rfind(".")]: f
+        for f in fragments.values()
+        if f.ability_data is not None
+    }
+
+    ability_dt = game.data_table("DT_Abilities")
+    abilities = abilities_from_data_table(ability_dt, game, ability_fragments_by_path)
 
     npcs = [
         Npc.from_bpgc(bp, name, game.translations)

@@ -213,11 +213,13 @@ def gen_shields(items: Items) -> str:
 
 def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items) -> str:
     lines = preamble()
-    lines.append("local p = {}")
+    lines.append("local p = {")
+    lines.append("    byId = {},")
+    lines.append("}")
 
     for table in loot_tables.values():
         lines.append(f"-- {table.note}")
-        lines.append(f"p[{table.id}] = {{")
+        lines.append(f"p.byId[{table.id}] = {{")
         # lines.append(f'    note = "{table.note}",')
         lines.append("    items = {")
         for entry in sorted(table.entries, key=lambda e: e.item_id):
@@ -238,10 +240,16 @@ def gen_loot_tables(loot_tables: dict[int, LootTable], items: Items) -> str:
 
 def gen_abilities(abilities: dict[str, Ability]) -> str:
     lines = preamble()
-    lines.append("local p = {}")
+    lines.append("local p = {")
+    lines.append("    byKey = {},")
+    lines.append("    byFragmentId = {},")
+    lines.append("}")
 
     for ability in abilities.values():
-        lines.append(f'p["{ability.key}"] = {{')
+        lines.append(f'p.byKey["{ability.key}"] = {{')
+        lines.append(f'    key = "{ability.key}",')
+        if ability.fragment_id:
+            lines.append(f"    fragment_id = {ability.fragment_id},")
         lines.append(f"    is_passive = {format_bool(ability.is_passive)},")
         lines.append(f"    is_gear_passive = {format_bool(ability.is_gear_passive)},")
         lines.append(f"    force_upgrade = {format_bool(ability.force_upgrade)},")
@@ -252,19 +260,26 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
         lines.append(f'    type = "{ability.type}",')
         lines.append(f'    target = "{ability.target}",')
         lines.append(f"    is_weapon_based = {format_bool(ability.is_weapon_based)},")
-        lines.append("    names = {")
-        for key, name in ability.names.items():
-            lines.append(f'        ["{key}"] = "{name}",')
-        lines.append("    },")
-        lines.append("    descriptions = {")
-        for key, desc in ability.descriptions.items():
-            lines.append(f'        ["{key}"] = [[{desc}]],')
-        lines.append("    },")
+        assert len(ability.names) == 1
+        name = ability.names["EAffinityType::VE_Unaffiliated"]
+        lines.append(f'    name = "{name}",')
+        # lines.append("    names = {")
+        # for key, name in ability.names.items():
+        #     lines.append(f'        ["{key}"] = "{name}",')
+        # lines.append("    },")
+        # lines.append("    descriptions = {")
+        # for key, desc in ability.descriptions.items():
+        #     lines.append(f'        ["{key}"] = [[{desc}]],')
+        # lines.append("    },")
         lines.append(f"    base_damage = {ability.base_damage},")
         lines.append(
             f"    is_affected_by_combos = {format_bool(ability.is_affected_by_combos)},"
         )
         lines.append("}")
+        if ability.fragment_id:
+            lines.append(
+                f'p.byFragmentId[{ability.fragment_id}] = p.byKey["{ability.key}"]'
+            )
 
     lines.append("return p")
 
@@ -273,14 +288,16 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
 
 def gen_fragments(fragments: dict[int, Fragment]) -> str:
     lines = preamble()
-    lines.append("local p = {}")
+    lines.append("local p = {")
+    lines.append("    byId = {},")
+    lines.append("}")
 
     for fragment in fragments.values():
-        lines.append(f"p[{fragment.id}] = {{")
+        lines.append(f"p.byId[{fragment.id}] = {{")
         lines.append(f"    id = {fragment.id},")
         lines.append(f"    is_debug = {format_bool(fragment.is_debug)},")
         lines.append(f'    name = "{fragment.name}",')
-        lines.append(f'    description = "{fragment.description}",')
+        # lines.append(f'    description = "{fragment.description}",')
         lines.append(f'    type = "{fragment.type.value}",')
         lines.append(f"    tier = {fragment.tier},")
         lines.append(f"    is_passive = {format_bool(fragment.is_passive)},")
@@ -317,11 +334,13 @@ def gen_fragments(fragments: dict[int, Fragment]) -> str:
 
 def gen_recipes(recipes: list[Recipe], items: Items) -> str:
     lines = preamble()
-    lines.append("local p = {}")
+    lines.append("local p = {")
+    lines.append("    byKey = {},")
+    lines.append("}")
 
     for recipe in recipes:
         result_item: Item = items.id_first(recipe.item_id)  # ty: ignore[invalid-assignment]
-        lines.append(f'p["{recipe.key}"] = {{')
+        lines.append(f'p.byKey["{recipe.key}"] = {{')
         lines.append(f'    name = "{recipe.name}",')
         lines.append(f'    type = "{recipe.type}",')
         lines.append("    result = {")
