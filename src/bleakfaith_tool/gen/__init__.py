@@ -283,6 +283,7 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
     lines.append("local p = {")
     lines.append("    byKey = {},")
     lines.append("    byFragmentId = {},")
+    lines.append("    byName = {},")
     lines.append("}")
 
     for ability in abilities.values():
@@ -312,6 +313,7 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
             lines.append(
                 f'p.byFragmentId[{ability.fragment_id}] = p.byKey["{ability.key}"]'
             )
+        lines.append(f'p.byName["{name}"] = p.byKey["{ability.key}"]')
 
     lines.append("return p")
 
