@@ -91,7 +91,9 @@ def gen_items(items: Items) -> str:
     return render(lines)
 
 
-def gen_weapons(items: Items, fragments: dict[int, Fragment]) -> str:
+def gen_weapons(
+    items: Items, fragments: dict[int, Fragment], abilities: dict[str, Ability]
+) -> str:
     weapons = [i for i in items.by_id_base.values() if i.is_weapon]
     lines = preamble()
     lines.append("local p = {")
@@ -147,9 +149,17 @@ def gen_weapons(items: Items, fragments: dict[int, Fragment]) -> str:
         lines.append("            abilityFragmentIds = {")
         for id in fdat.ability_fragment_ids:
             fragment = fragments.get(id)
-            fragment_name: str | None = fragment.name if fragment else None
+            ability = (
+                next(
+                    (a for a in abilities.values() if a.fragment_id == fragment.id),
+                    None,
+                )
+                if fragment
+                else None
+            )
+            ability_name = ability.name if ability else None
             lines.append(
-                f"                {id}, -- {fragment_name if fragment_name else '<UNKNOWN FRAGMENT>'}"
+                f"                {id}, -- {f'{ability_name} ({"Passive" if ability.is_passive else "Active"})' if ability_name else '<UNKNOWN ABILITY>'}"  # ty: ignore[unresolved-attribute]
             )
         lines.append("            },")
         lines.append("        },")
@@ -293,14 +303,6 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
         assert len(ability.names) == 1
         name = ability.names["EAffinityType::VE_Unaffiliated"]
         lines.append(f'    name = "{name}",')
-        # lines.append("    names = {")
-        # for key, name in ability.names.items():
-        #     lines.append(f'        ["{key}"] = "{name}",')
-        # lines.append("    },")
-        # lines.append("    descriptions = {")
-        # for key, desc in ability.descriptions.items():
-        #     lines.append(f'        ["{key}"] = [[{desc}]],')
-        # lines.append("    },")
         lines.append(f"    baseDamage = {ability.base_damage},")
         lines.append(
             f"    isAffectedByCombos = {format_bool(ability.is_affected_by_combos)},"
@@ -327,7 +329,6 @@ def gen_fragments(fragments: dict[int, Fragment]) -> str:
         lines.append(f"    id = {fragment.id},")
         lines.append(f"    isDebug = {format_bool(fragment.is_debug)},")
         lines.append(f'    name = "{fragment.name}",')
-        # lines.append(f'    description = "{fragment.description}",')
         lines.append(f'    type = "{fragment.type.value}",')
         lines.append(f"    tier = {fragment.tier},")
         lines.append(f"    isPassive = {format_bool(fragment.is_passive)},")
@@ -490,8 +491,13 @@ class LuaGenerator:
         lua_code = gen_items(items)
         self._write("items.lua", lua_code)
 
-    def write_weapons(self, items: Items, fragments: dict[int, Fragment]) -> None:
-        lua_code = gen_weapons(items, fragments)
+    def write_weapons(
+        self,
+        items: Items,
+        fragments: dict[int, Fragment],
+        abilities: dict[str, Ability],
+    ) -> None:
+        lua_code = gen_weapons(items, fragments, abilities)
         self._write("weapons.lua", lua_code)
 
     def write_armor(self, items: Items) -> None:

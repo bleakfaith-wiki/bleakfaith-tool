@@ -56,12 +56,12 @@ class Ability:
         im_keymap = make_map(inner_main)
         self.is_weapon_based: bool = inner_main[im_keymap["IsWeaponBased?"]]
 
-        names = inner_main[im_keymap["AbilityName"]]
         self.names: dict[str, str] = {}
-        for entry in names:
+        for entry in inner_main[im_keymap["AbilityName"]]:
             value = entry["Value"]
             if value and value != "" and value != "None":
                 self.names[entry["Key"]] = l10n(value)
+        self.name = self.names["EAffinityType::VE_Unaffiliated"]
 
         descs = inner_main[im_keymap["AbilityDescription"]]
         self.descriptions: dict[str, str] = {}
@@ -69,6 +69,7 @@ class Ability:
             value = entry["Value"]["SourceString"]
             if value and value != "" and value != "None":
                 self.descriptions[entry["Key"]] = l10n(value)
+        self.description = self.descriptions["EAffinityType::VE_Unaffiliated"]
         dmg_data = inner_main[im_keymap["DamageData"]]
         dmg_keymap = make_map(dmg_data)
         self.base_damage: float = dmg_data[dmg_keymap["BaseDamage"]]
