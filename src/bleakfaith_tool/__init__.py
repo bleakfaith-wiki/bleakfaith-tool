@@ -85,7 +85,7 @@ def main() -> int:
     luagen = LuaGenerator("out/lua")
 
     luagen.write_items(items)
-    luagen.write_weapons(items)
+    luagen.write_weapons(items, fragments)
     luagen.write_armor(items)
     luagen.write_shields(items)
     luagen.write_loot_tables(loot_tables, items)

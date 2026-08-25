@@ -91,7 +91,7 @@ def gen_items(items: Items) -> str:
     return render(lines)
 
 
-def gen_weapons(items: Items) -> str:
+def gen_weapons(items: Items, fragments: dict[int, Fragment]) -> str:
     weapons = [i for i in items.by_id_base.values() if i.is_weapon]
     lines = preamble()
     lines.append("local p = {")
@@ -124,6 +124,36 @@ def gen_weapons(items: Items) -> str:
             lines.append(f'    speed = "{wdat.speed.value}",')
         if wdat.sharpness:
             lines.append(f'    sharpness = "{wdat.sharpness.value}",')
+        fdat = wdat.fragment_slot_data
+        lines.append("    fragments = {")
+        lines.append(f"        canBeEdited = {format_bool(fdat.can_be_edited)},")
+        lines.append(f"        [{weapon.tier}] = {{ -- Mk {weapon.tier - 1}")
+        lines.append(
+            f"            numStatSlots = {fdat.number_of_available_stat_slots},"
+        )
+        lines.append("            statFragmentIds = {")
+        for idx, id in enumerate(fdat.stat_fragment_ids):
+            if id == 0:
+                continue
+            fragment = fragments.get(id)
+            fragment_name: str | None = fragment.name if fragment else None
+            lines.append(
+                f"                [{idx + 1}] = {id}, -- {fragment_name if fragment_name else '<UNKNOWN FRAGMENT>'}"
+            )
+        lines.append("            },")
+        lines.append(
+            f"            numAbilitySlots = {fdat.number_of_available_ability_slots},"
+        )
+        lines.append("            abilityFragmentIds = {")
+        for id in fdat.ability_fragment_ids:
+            fragment = fragments.get(id)
+            fragment_name: str | None = fragment.name if fragment else None
+            lines.append(
+                f"                {id}, -- {fragment_name if fragment_name else '<UNKNOWN FRAGMENT>'}"
+            )
+        lines.append("            },")
+        lines.append("        },")
+        lines.append("    }")
         end_item(lines, weapon)
 
     lines.append("return p")
@@ -460,8 +490,8 @@ class LuaGenerator:
         lua_code = gen_items(items)
         self._write("items.lua", lua_code)
 
-    def write_weapons(self, items: Items) -> None:
-        lua_code = gen_weapons(items)
+    def write_weapons(self, items: Items, fragments: dict[int, Fragment]) -> None:
+        lua_code = gen_weapons(items, fragments)
         self._write("weapons.lua", lua_code)
 
     def write_armor(self, items: Items) -> None:
