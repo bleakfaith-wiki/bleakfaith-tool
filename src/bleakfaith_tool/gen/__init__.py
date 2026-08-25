@@ -487,50 +487,57 @@ class LuaGenerator:
         os.makedirs(self.path, exist_ok=True)
         LOG.info("created lua output dir", path=self.path)
 
-    def write_items(self, items: Items) -> None:
+    def write_items(self, items: Items) -> str:
         lua_code = gen_items(items)
         self._write("items.lua", lua_code)
+        return lua_code
 
     def write_weapons(
         self,
         items: Items,
         fragments: dict[int, Fragment],
         abilities: dict[str, Ability],
-    ) -> None:
+    ) -> str:
         lua_code = gen_weapons(items, fragments, abilities)
         self._write("weapons.lua", lua_code)
+        return lua_code
 
-    def write_armor(self, items: Items) -> None:
+    def write_armor(self, items: Items) -> str:
         lua_code = gen_armor(items)
         self._write("armor.lua", lua_code)
+        return lua_code
 
-    def write_shields(self, items: Items) -> None:
+    def write_shields(self, items: Items) -> str:
         lua_code = gen_shields(items)
         self._write("shields.lua", lua_code)
+        return lua_code
 
-    def write_loot_tables(
-        self, loot_tables: dict[int, LootTable], items: Items
-    ) -> None:
+    def write_loot_tables(self, loot_tables: dict[int, LootTable], items: Items) -> str:
         lua_code = gen_loot_tables(loot_tables, items)
         self._write("loot_tables.lua", lua_code)
+        return lua_code
 
-    def write_abilities(self, abilities: dict[str, Ability]) -> None:
+    def write_abilities(self, abilities: dict[str, Ability]) -> str:
         lua_code = gen_abilities(abilities)
         self._write("abilities.lua", lua_code)
+        return lua_code
 
-    def write_fragments(self, fragments: dict[int, Fragment]) -> None:
+    def write_fragments(self, fragments: dict[int, Fragment]) -> str:
         lua_code = gen_fragments(fragments)
         self._write("fragments.lua", lua_code)
+        return lua_code
 
-    def write_recipes(self, recipes: list[Recipe], items: Items) -> None:
+    def write_recipes(self, recipes: list[Recipe], items: Items) -> str:
         lua_code = gen_recipes(recipes, items)
         self._write("recipes.lua", lua_code)
+        return lua_code
 
     def write_npcs(
         self, npcs: list[Npc], items: Items, loot_tables: dict[int, LootTable]
-    ) -> None:
+    ) -> str:
         lua_code = gen_npcs(npcs, items, loot_tables)
         self._write("npcs.lua", lua_code)
+        return lua_code
 
     def _write(self, filename: str, content: str) -> None:
         path = os.path.join(self.path, filename)

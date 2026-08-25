@@ -23,6 +23,13 @@ def env_or_raise(name: str) -> str:
     raise RuntimeError(f"Environment variable {name} is not set.")
 
 
+def update_wiki(data: dict[str, str]) -> None:
+    from bleakfaith_tool.wiki import get_modifier
+
+    modifier = get_modifier(data)
+    modifier.run()
+
+
 def main() -> int:
     log_level = os.getenv("LOG_LEVEL")
     if log_level:
@@ -84,15 +91,20 @@ def main() -> int:
 
     luagen = LuaGenerator("out/lua")
 
-    luagen.write_items(items)
-    luagen.write_weapons(items, fragments, abilities)
-    luagen.write_armor(items)
-    luagen.write_shields(items)
-    luagen.write_loot_tables(loot_tables, items)
-    luagen.write_abilities(abilities)
-    luagen.write_fragments(fragments)
-    luagen.write_recipes(recipes, items)
-    luagen.write_npcs(npcs, items, loot_tables)
+    wikidata = {
+        "Module:GameData/items": luagen.write_items(items),
+        "Module:GameData/weapons": luagen.write_weapons(items, fragments, abilities),
+        "Module:GameData/armor": luagen.write_armor(items),
+        "Module:GameData/shields": luagen.write_shields(items),
+        "Module:GameData/lootTables": luagen.write_loot_tables(loot_tables, items),
+        "Module:GameData/abilities": luagen.write_abilities(abilities),
+        "Module:GameData/fragments": luagen.write_fragments(fragments),
+        "Module:GameData/recipes": luagen.write_recipes(recipes, items),
+        "Module:GameData/npcs": luagen.write_npcs(npcs, items, loot_tables),
+    }
+
+    if "--update" in sys.argv:
+        update_wiki(wikidata)
 
     return 0
 
