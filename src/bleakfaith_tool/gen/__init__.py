@@ -142,11 +142,11 @@ def gen_armor(items: Items) -> str:
     def print_defense(dat: ArmorData) -> None:
         lines.append(f"        [{dat.tier}] = {{ -- Mk {dat.tier - 1}")
         lines.append(f"            sharp = {dat.sharp},")
-        lines.append(f"            sharp_multiplier = {dat.sharp_multiplier},")
+        lines.append(f"            sharpMultiplier = {dat.sharp_multiplier},")
         lines.append(f"            blunt = {dat.blunt},")
-        lines.append(f"            blunt_multiplier = {dat.blunt_multiplier},")
+        lines.append(f"            bluntMultiplier = {dat.blunt_multiplier},")
         lines.append(f"            techno = {dat.techno},")
-        lines.append(f"            techno_multiplier = {dat.techno_multiplier},")
+        lines.append(f"            technoMultiplier = {dat.techno_multiplier},")
         lines.append("        },")
 
     for armor in armors:
@@ -183,9 +183,9 @@ def gen_shields(items: Items) -> str:
 
     def print_defense(dat: ArmorData) -> None:
         lines.append(f"        [{dat.tier}] = {{ -- Mk {dat.tier - 1}")
-        lines.append(f"            sharp_multiplier = {dat.sharp_multiplier},")
-        lines.append(f"            blunt_multiplier = {dat.blunt_multiplier},")
-        lines.append(f"            techno_multiplier = {dat.techno_multiplier},")
+        lines.append(f"            sharpMultiplier = {dat.sharp_multiplier},")
+        lines.append(f"            bluntMultiplier = {dat.blunt_multiplier},")
+        lines.append(f"            technoMultiplier = {dat.techno_multiplier},")
         lines.append("        },")
 
     for shield in shields:
@@ -249,17 +249,17 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
         lines.append(f'p.byKey["{ability.key}"] = {{')
         lines.append(f'    key = "{ability.key}",')
         if ability.fragment_id:
-            lines.append(f"    fragment_id = {ability.fragment_id},")
-        lines.append(f"    is_passive = {format_bool(ability.is_passive)},")
-        lines.append(f"    is_gear_passive = {format_bool(ability.is_gear_passive)},")
-        lines.append(f"    force_upgrade = {format_bool(ability.force_upgrade)},")
-        lines.append(f"    is_class_active = {format_bool(ability.is_class_active)},")
+            lines.append(f"    fragmentId = {ability.fragment_id},")
+        lines.append(f"    isPassive = {format_bool(ability.is_passive)},")
+        lines.append(f"    isGearPassive = {format_bool(ability.is_gear_passive)},")
+        lines.append(f"    forceUpgrade = {format_bool(ability.force_upgrade)},")
+        lines.append(f"    isClassActive = {format_bool(ability.is_class_active)},")
         if ability.unlocked_by:
-            lines.append(f"    unlocked_by = {ability.unlocked_by},")
+            lines.append(f"    unlockedBy = {ability.unlocked_by},")
         lines.append(f'    element = "{ability.element}",')
         lines.append(f'    type = "{ability.type}",')
         lines.append(f'    target = "{ability.target}",')
-        lines.append(f"    is_weapon_based = {format_bool(ability.is_weapon_based)},")
+        lines.append(f"    isWeaponBased = {format_bool(ability.is_weapon_based)},")
         assert len(ability.names) == 1
         name = ability.names["EAffinityType::VE_Unaffiliated"]
         lines.append(f'    name = "{name}",')
@@ -271,9 +271,9 @@ def gen_abilities(abilities: dict[str, Ability]) -> str:
         # for key, desc in ability.descriptions.items():
         #     lines.append(f'        ["{key}"] = [[{desc}]],')
         # lines.append("    },")
-        lines.append(f"    base_damage = {ability.base_damage},")
+        lines.append(f"    baseDamage = {ability.base_damage},")
         lines.append(
-            f"    is_affected_by_combos = {format_bool(ability.is_affected_by_combos)},"
+            f"    isAffectedByCombos = {format_bool(ability.is_affected_by_combos)},"
         )
         lines.append("}")
         if ability.fragment_id:
@@ -295,23 +295,23 @@ def gen_fragments(fragments: dict[int, Fragment]) -> str:
     for fragment in fragments.values():
         lines.append(f"p.byId[{fragment.id}] = {{")
         lines.append(f"    id = {fragment.id},")
-        lines.append(f"    is_debug = {format_bool(fragment.is_debug)},")
+        lines.append(f"    isDebug = {format_bool(fragment.is_debug)},")
         lines.append(f'    name = "{fragment.name}",')
         # lines.append(f'    description = "{fragment.description}",')
         lines.append(f'    type = "{fragment.type.value}",')
         lines.append(f"    tier = {fragment.tier},")
-        lines.append(f"    is_passive = {format_bool(fragment.is_passive)},")
+        lines.append(f"    isPassive = {format_bool(fragment.is_passive)},")
         if fragment.quest_id is not None:
-            lines.append(f"    quest_id = {fragment.quest_id},")
+            lines.append(f"    questId = {fragment.quest_id},")
         if fragment.ability_data:
-            lines.append("    ability_data = {")
-            lines.append("        acceptable_weapons = {")
+            lines.append("    abilityData = {")
+            lines.append("        acceptableWeapons = {")
             for weapon in fragment.ability_data.acceptable_weapons:
                 lines.append(f'            "{weapon}",')
             lines.append("        },")
             lines.append("    },")
         elif fragment.stat_data:
-            lines.append("    stat_data = {")
+            lines.append("    statData = {")
             lines.append("        armor = {")
             lines.append(
                 f'            attribute = "{fragment.stat_data.armor.attribute}",'
@@ -416,8 +416,8 @@ def gen_npcs(npcs: list[Npc], items: Items, loot_tables: dict[int, LootTable]) -
             lines.append("        {")
             lines.append(f'            key = "{cap.key}",')
             lines.append(f"            current = {cap.current},")
-            lines.append(f"            soft_cap = {cap.soft_cap},")
-            lines.append(f"            hard_cap = {cap.hard_cap},")
+            lines.append(f"            softCap = {cap.soft_cap},")
+            lines.append(f"            hardCap = {cap.hard_cap},")
             lines.append("        },")
         lines.append("    },")
         lines.append("    experience = {")
