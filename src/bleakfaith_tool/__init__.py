@@ -95,7 +95,7 @@ def main() -> int:
         "Module:GameData/items": luagen.write_items(items),
         "Module:GameData/weapons": luagen.write_weapons(items, fragments, abilities),
         "Module:GameData/armor": luagen.write_armor(items),
-        "Module:GameData/shields": luagen.write_shields(items),
+        "Module:GameData/shields": luagen.write_shields(items, fragments, abilities),
         "Module:GameData/lootTables": luagen.write_loot_tables(loot_tables, items),
         "Module:GameData/abilities": luagen.write_abilities(abilities),
         "Module:GameData/fragments": luagen.write_fragments(fragments),

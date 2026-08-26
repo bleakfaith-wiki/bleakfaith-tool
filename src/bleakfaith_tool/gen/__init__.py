@@ -213,7 +213,9 @@ def gen_armor(items: Items) -> str:
     return render(lines)
 
 
-def gen_shields(items: Items) -> str:
+def gen_shields(
+    items: Items, fragments: dict[int, Fragment], abilities: dict[str, Ability]
+) -> str:
     shields = [i for i in items.by_id_base.values() if i.is_shield]
     lines = preamble()
     lines.append("local p = {")
@@ -244,6 +246,44 @@ def gen_shields(items: Items) -> str:
         if shield.armor_data.weight:
             lines.append(f'    weight = "{shield.armor_data.weight.value}",')
         # lines.append(f'    slot = "{shield.armor_data.slot.value}",')
+        fdat = adat.fragment_slot_data
+        lines.append("    fragments = {")
+        lines.append(f"        canBeEdited = {format_bool(fdat.can_be_edited)},")
+        lines.append(f"        [{shield.tier}] = {{ -- Mk {shield.tier - 1}")
+        lines.append(
+            f"            numStatSlots = {fdat.number_of_available_stat_slots},"
+        )
+        lines.append("            statFragmentIds = {")
+        for idx, id in enumerate(fdat.stat_fragment_ids):
+            if id == 0:
+                continue
+            fragment = fragments.get(id)
+            fragment_name: str | None = fragment.name if fragment else None
+            lines.append(
+                f"                [{idx + 1}] = {id}, -- {fragment_name if fragment_name else '<UNKNOWN FRAGMENT>'}"
+            )
+        lines.append("            },")
+        lines.append(
+            f"            numAbilitySlots = {fdat.number_of_available_ability_slots},"
+        )
+        lines.append("            abilityFragmentIds = {")
+        for id in fdat.ability_fragment_ids:
+            fragment = fragments.get(id)
+            ability = (
+                next(
+                    (a for a in abilities.values() if a.fragment_id == fragment.id),
+                    None,
+                )
+                if fragment
+                else None
+            )
+            ability_name = ability.name if ability else None
+            lines.append(
+                f"                {id}, -- {f'{ability_name} ({"Passive" if ability.is_passive else "Active"})' if ability_name else '<UNKNOWN ABILITY>'}"  # ty: ignore[unresolved-attribute]
+            )
+        lines.append("            },")
+        lines.append("        },")
+        lines.append("    },")
         end_item(lines, shield)
 
     lines.append("return p")
@@ -509,8 +549,13 @@ class LuaGenerator:
         self._write("armor.lua", lua_code)
         return lua_code
 
-    def write_shields(self, items: Items) -> str:
-        lua_code = gen_shields(items)
+    def write_shields(
+        self,
+        items: Items,
+        fragments: dict[int, Fragment],
+        abilities: dict[str, Ability],
+    ) -> str:
+        lua_code = gen_shields(items, fragments, abilities)
         self._write("shields.lua", lua_code)
         return lua_code
 
