@@ -31,31 +31,7 @@ def update_wiki(data: dict[str, str]) -> None:
 
 
 def main() -> int:
-    log_level = os.getenv("LOG_LEVEL")
-    if log_level:
-        log_level = log_level.upper()
-    else:
-        log_level = logging.INFO
-
-    structlog.configure(
-        wrapper_class=structlog.make_filtering_bound_logger(log_level),
-        processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.StackInfoRenderer(),
-            structlog.processors.format_exc_info,
-            structlog.processors.CallsiteParameterAdder(
-                {
-                    structlog.processors.CallsiteParameter.MODULE,
-                    structlog.processors.CallsiteParameter.FUNC_NAME,
-                    structlog.processors.CallsiteParameter.LINENO,
-                }
-            ),
-            structlog.processors.UnicodeDecoder(),
-            structlog.dev.ConsoleRenderer(),
-        ],
-    )
+    init_log()
 
     LOG.info("Starting")
 
@@ -107,6 +83,34 @@ def main() -> int:
         update_wiki(wikidata)
 
     return 0
+
+
+def init_log() -> None:
+    log_level = os.getenv("LOG_LEVEL")
+    if log_level:
+        log_level = log_level.upper()
+    else:
+        log_level = logging.INFO
+
+    structlog.configure(
+        wrapper_class=structlog.make_filtering_bound_logger(log_level),
+        processors=[
+            structlog.contextvars.merge_contextvars,
+            structlog.processors.add_log_level,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.StackInfoRenderer(),
+            structlog.processors.format_exc_info,
+            structlog.processors.CallsiteParameterAdder(
+                {
+                    structlog.processors.CallsiteParameter.MODULE,
+                    structlog.processors.CallsiteParameter.FUNC_NAME,
+                    structlog.processors.CallsiteParameter.LINENO,
+                }
+            ),
+            structlog.processors.UnicodeDecoder(),
+            structlog.dev.ConsoleRenderer(),
+        ],
+    )
 
 
 if __name__ == "__main__":
