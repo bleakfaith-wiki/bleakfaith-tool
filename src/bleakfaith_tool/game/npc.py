@@ -2,21 +2,21 @@ import json
 from dataclasses import dataclass
 
 from bleakfaith_tool.game.l10n import Translations
+from bleakfaith_tool.unreal import BlueprintGeneratedClass
 
 
 class Npc:
     def __init__(
-        self, blueprint: list[dict], asset_name: str, l10n: Translations
+        self, blueprint: BlueprintGeneratedClass, asset_name: str, l10n: Translations
     ) -> None:
-        bp_entry = next(e for e in blueprint if e["Type"] == "BlueprintGeneratedClass")
-        npc = next(e for e in blueprint if e["Type"] == bp_entry["Name"])
-        combat = next(
-            (e for e in blueprint if e["Type"] == "BP_CombatComponent_C"), None
-        )
+        bp_data = blueprint.data
+        bp_entry = next(e for e in bp_data if e["Type"] == "BlueprintGeneratedClass")
+        npc = next(e for e in bp_data if e["Type"] == bp_entry["Name"])
+        combat = next((e for e in bp_data if e["Type"] == "BP_CombatComponent_C"), None)
         equipment = next(
-            (e for e in blueprint if e["Type"] == "BP_EquipmentComponent_C"), None
+            (e for e in bp_data if e["Type"] == "BP_EquipmentComponent_C"), None
         )
-        stats = next((e for e in blueprint if e["Type"] == "BP_StatComponent_C"), None)
+        stats = next((e for e in bp_data if e["Type"] == "BP_StatComponent_C"), None)
 
         self.id: str = asset_name
         self.loot_tables: list[int] = []
@@ -83,13 +83,16 @@ class Npc:
                             )
 
     @staticmethod
-    def from_bpgc(bpgc: list[dict], asset_name: str, l10n: Translations) -> Npc:
+    def from_bpgc(
+        bpgc: BlueprintGeneratedClass, asset_name: str, l10n: Translations
+    ) -> Npc:
         return Npc(bpgc, asset_name, l10n)
 
     @staticmethod
     def from_file(path: str, asset_name: str, l10n: Translations) -> Npc:
         with open(path, "r") as f:
-            blueprint: list[dict] = json.load(f)
+            blueprint_data: list[dict] = json.load(f)
+        blueprint = BlueprintGeneratedClass("inline", path, blueprint_data)
         return Npc.from_bpgc(blueprint, asset_name, l10n)
 
 

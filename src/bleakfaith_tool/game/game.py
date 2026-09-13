@@ -105,7 +105,7 @@ class Game:
             if entry["Type"] == "BlueprintGeneratedClass"
         )
 
-        self.bpgcs[name] = bpgc
+        self.bpgcs[name] = BlueprintGeneratedClass(name=name, path=path, data=bpgc)
         LOG.debug("loaded BPGC", name=name, path=path)
 
     def load_bpgcs(self, paths: list[str], strict: bool = True) -> None:

@@ -62,7 +62,9 @@ def main() -> int:
     npcs = [
         Npc.from_bpgc(bp, name, game.translations)
         for name, bp in game.bpgcs.items()
-        if name.startswith("NPC_") or "_DocileNPC_" in name
+        if name.startswith("NPC_")
+        or "_DocileNPC_" in name
+        or "/Blueprints/Characters/Enemy/" in bp.path
     ]
 
     luagen = LuaGenerator("out/lua")
